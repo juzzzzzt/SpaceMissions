@@ -23,7 +23,6 @@ MainWindow::MainWindow(QWidget *parent)
     // Create and set up UI components
     searchLineEdit = new QLineEdit(this);
     filterComboBox = new QComboBox(this);
-    filterLineEdit = new QLineEdit(this);
     tableWidget = new QTableWidget(this);
 
     QPushButton *searchButton = new QPushButton("Search", this);
@@ -35,22 +34,17 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addLayout(searchLayout);
 
     // Setup filter combo box with criteria
-    filterComboBox->addItems({"CompanyName", "Location", "Datum", "Detail", "Status Rocket", "Rocket", "Status Mission"});
+    filterComboBox->addItems({"CompanyName", "Location", "Datum", "RocketName", "Status Rocket", "Status Mission"});
 
-    QHBoxLayout *filterLayout = new QHBoxLayout;
-    filterLayout->addWidget(filterComboBox);
-    filterLayout->addWidget(filterLineEdit);
-
-    mainLayout->addLayout(filterLayout);
+    mainLayout->addWidget(filterComboBox);
     mainLayout->addWidget(tableWidget);
 
     setCentralWidget(centralWidget);
 
     connect(searchButton, &QPushButton::clicked, this, &MainWindow::on_searchButton_clicked);
     connect(filterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_filterChanged);
-    connect(filterLineEdit, &QLineEdit::textChanged, this, &MainWindow::on_filterChanged);
 
-    loadCSV("C:/Users/79032/Documents/space_missions.csv"); // Adjust the path to your CSV file
+    loadCSV("C:/Users/Аскар/OneDrive/Рабочий стол/space_missions.csv"); // Adjust the path to your CSV file
 }
 
 MainWindow::~MainWindow()
@@ -61,16 +55,35 @@ MainWindow::~MainWindow()
 void MainWindow::loadCSV(const QString &filename)
 {
     csvData = parseCSV(filename);
+    setupTable();
     updateTable(csvData);
+}
+
+void MainWindow::setupTable()
+{
+    if (csvData.empty()) return;
+
+    tableWidget->setColumnCount(csvData[0].size());
+    tableWidget->setRowCount(0); // Initially no rows, as we will add them dynamically
+
+    // Add QLineEdit for each column for filtering
+    filterLineEdits.clear();
+    QHBoxLayout *filterLayout = new QHBoxLayout;
+    for (int i = 0; i < csvData[0].size(); ++i) {
+        QLineEdit *filterLineEdit = new QLineEdit(this);
+        filterLineEdits.append(filterLineEdit);
+        filterLayout->addWidget(filterLineEdit);
+
+        connect(filterLineEdit, &QLineEdit::textChanged, this, &MainWindow::on_filterChanged);
+    }
+
+    QVBoxLayout *mainLayout = static_cast<QVBoxLayout *>(centralWidget()->layout());
+    mainLayout->insertLayout(2, filterLayout);
 }
 
 void MainWindow::updateTable(const std::vector<std::vector<QString>> &data)
 {
-    if (data.empty()) return;
-
     tableWidget->setRowCount(data.size());
-    tableWidget->setColumnCount(data[0].size());
-
     for (size_t i = 0; i < data.size(); ++i) {
         for (size_t j = 0; j < data[i].size(); ++j) {
             tableWidget->setItem(i, j, new QTableWidgetItem(data[i][j]));
@@ -95,16 +108,18 @@ void MainWindow::on_searchButton_clicked()
 
 void MainWindow::on_filterChanged()
 {
-    int filterIndex = filterComboBox->currentIndex();
-    QString filterText = filterLineEdit->text().trimmed();
-
-    std::vector<std::vector<QString>> filteredData;
-
-    for (const auto &row : csvData) {
-        if (row[filterIndex].contains(filterText, Qt::CaseInsensitive)) {
-            filteredData.push_back(row);
+    std::vector<std::vector<QString>> filteredData = csvData;
+    for (int i = 0; i < filterLineEdits.size(); ++i) {
+        QString filterText = filterLineEdits[i]->text().trimmed();
+        if (!filterText.isEmpty()) {
+            std::vector<std::vector<QString>> tempFilteredData;
+            for (const auto &row : filteredData) {
+                if (row[i].contains(filterText, Qt::CaseInsensitive)) {
+                    tempFilteredData.push_back(row);
+                }
+            }
+            filteredData = std::move(tempFilteredData);
         }
     }
-
     updateTable(filteredData);
 }
