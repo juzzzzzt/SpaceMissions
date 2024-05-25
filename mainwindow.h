@@ -2,11 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <vector>
-#include <QString>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QTableWidget>
+#include <vector>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,16 +22,18 @@ public:
 private slots:
     void on_searchButton_clicked();
     void on_filterChanged();
-    void loadCSV(const QString &filename);
-    void updateTable(const std::vector<std::vector<QString>> &data);
 
 private:
+    void loadCSV(const QString &filename);
+    void setupTable();
+    void updateTable(const std::vector<std::vector<QString>> &data);
+
     Ui::MainWindow *ui;
-    std::vector<std::vector<QString>> csvData;
     QLineEdit *searchLineEdit;
     QComboBox *filterComboBox;
-    QLineEdit *filterLineEdit;
     QTableWidget *tableWidget;
+    std::vector<std::vector<QString>> csvData;
+    QVector<QLineEdit*> filterLineEdits;  // Добавить объявление переменной здесь
 };
 
 #endif // MAINWINDOW_H

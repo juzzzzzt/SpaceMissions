@@ -19,6 +19,7 @@ std::vector<std::vector<QString>> parseCSV(const QString &filename) {
         }
         data.push_back(row);
     }
+
     file.close();
     return data;
 }
