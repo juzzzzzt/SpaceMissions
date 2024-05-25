@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(searchButton, &QPushButton::clicked, this, &MainWindow::on_searchButton_clicked);
     //connect(filterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_filterChanged);
 
-    loadCSV("C:/Users/Аскар/OneDrive/Рабочий стол/space_missions.csv"); // Adjust the path to your CSV file
+    loadCSV("C:/Users/79032/Documents/space_missions.csv"); // Adjust the path to your CSV file
 }
 
 MainWindow::~MainWindow()
@@ -97,7 +97,7 @@ void MainWindow::setupTable()
 void MainWindow::updateTable(const std::vector<std::vector<QString>> &data)
 {
     tableWidget->setRowCount(data.size());
-    for (size_t i = 0; i < data.size(); ++i) {
+    for (size_t i = 1; i < data.size(); ++i) {
         for (size_t j = 0; j < data[i].size(); ++j) {
             tableWidget->setItem(i, j, new QTableWidgetItem(data[i][j]));
         }
@@ -136,3 +136,5 @@ void MainWindow::on_filterChanged()
     }
     updateTable(filteredData);
 }
+
+
