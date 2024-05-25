@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Create and set up UI components
     searchLineEdit = new QLineEdit(this);
-    filterComboBox = new QComboBox(this);
+    //filterComboBox = new QComboBox(this);
     tableWidget = new QTableWidget(this);
 
     QPushButton *searchButton = new QPushButton("Search", this);
@@ -34,15 +34,15 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addLayout(searchLayout);
 
     // Setup filter combo box with criteria
-    filterComboBox->addItems({"CompanyName", "Location", "Datum", "RocketName", "Status Rocket", "Status Mission"});
+    //filterComboBox->addItems({"CompanyName", "Location", "Datum", "RocketName", "Status Rocket", "Status Mission"});
 
-    mainLayout->addWidget(filterComboBox);
+    //mainLayout->addWidget(filterComboBox);
     mainLayout->addWidget(tableWidget);
 
     setCentralWidget(centralWidget);
 
     connect(searchButton, &QPushButton::clicked, this, &MainWindow::on_searchButton_clicked);
-    connect(filterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_filterChanged);
+    //connect(filterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_filterChanged);
 
     loadCSV("C:/Users/Аскар/OneDrive/Рабочий стол/space_missions.csv"); // Adjust the path to your CSV file
 }
@@ -66,6 +66,11 @@ void MainWindow::setupTable()
     tableWidget->setColumnCount(csvData[0].size());
     tableWidget->setRowCount(0); // Initially no rows, as we will add them dynamically
 
+    // Set the table headers
+    QStringList headers;
+    headers << "CompanyName" << "Location" << "Datum" << "RocketName" << "Status Rocket" << "Status Mission";
+    tableWidget->setHorizontalHeaderLabels(headers);
+
     // Add QLineEdit for each column for filtering
     filterLineEdits.clear();
     QHBoxLayout *filterLayout = new QHBoxLayout;
@@ -79,6 +84,14 @@ void MainWindow::setupTable()
 
     QVBoxLayout *mainLayout = static_cast<QVBoxLayout *>(centralWidget()->layout());
     mainLayout->insertLayout(2, filterLayout);
+
+    // Set the columns to resize to fit the content
+    tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    // Set the same width for the filter QLineEdits as the columns
+    for (int i = 0; i < csvData[0].size(); ++i) {
+        filterLineEdits[i]->setMinimumWidth(tableWidget->columnWidth(i));
+    }
 }
 
 void MainWindow::updateTable(const std::vector<std::vector<QString>> &data)

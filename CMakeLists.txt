@@ -22,6 +22,8 @@ set(PROJECT_SOURCES
         csvparser.cpp
         statswindow.ui
         detailswindow.ui
+        statswindow.cpp
+        statswindow.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
