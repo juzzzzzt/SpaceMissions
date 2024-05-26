@@ -1,3 +1,4 @@
+// mainwindow.cpp
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "csvparser.h"
@@ -10,10 +11,18 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QHeaderView>
+#include <QDebug>
+
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QMessageBox>
+#include <QRegularExpression>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , missionDetailWindow(new MissionDetailWindow(this))
 {
     ui->setupUi(this);
 
@@ -22,7 +31,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Create and set up UI components
     searchLineEdit = new QLineEdit(this);
-    //filterComboBox = new QComboBox(this);
     tableWidget = new QTableWidget(this);
 
     QPushButton *searchButton = new QPushButton("Search", this);
@@ -32,19 +40,14 @@ MainWindow::MainWindow(QWidget *parent)
     searchLayout->addWidget(searchButton);
 
     mainLayout->addLayout(searchLayout);
-
-    // Setup filter combo box with criteria
-    //filterComboBox->addItems({"CompanyName", "Location", "Datum", "RocketName", "Status Rocket", "Status Mission"});
-
-    //mainLayout->addWidget(filterComboBox);
     mainLayout->addWidget(tableWidget);
 
     setCentralWidget(centralWidget);
 
     connect(searchButton, &QPushButton::clicked, this, &MainWindow::on_searchButton_clicked);
-    //connect(filterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_filterChanged);
+    connect(tableWidget, &QTableWidget::cellClicked, this, &MainWindow::on_tableWidget_cellClicked);
 
-    loadCSV("C:/Users/79032/Documents/space_missions.csv"); // Adjust the path to your CSV file
+    loadCSV("C:/Users/Аскар/OneDrive/Рабочий стол/space_missions.csv"); // Adjust the path to your CSV file
 }
 
 MainWindow::~MainWindow()
@@ -97,9 +100,16 @@ void MainWindow::setupTable()
 void MainWindow::updateTable(const std::vector<std::vector<QString>> &data)
 {
     tableWidget->setRowCount(data.size());
-    for (size_t i = 1; i < data.size(); ++i) {
+    for (size_t i = 0; i < data.size(); ++i) {
         for (size_t j = 0; j < data[i].size(); ++j) {
-            tableWidget->setItem(i, j, new QTableWidgetItem(data[i][j]));
+            QTableWidgetItem *item = new QTableWidgetItem(data[i][j]);
+            if (j == 3) { // Assuming the mission name is in the 4th column (index 3)
+                item->setData(Qt::UserRole, i); // Store the row index as user data
+                item->setForeground(Qt::blue);
+                item->setFont(QFont("Arial", 10, QFont::Bold));
+                item->setTextAlignment(Qt::AlignCenter);
+            }
+            tableWidget->setItem(i, j, item);
         }
     }
 }
@@ -137,4 +147,64 @@ void MainWindow::on_filterChanged()
     updateTable(filteredData);
 }
 
+// В вашем классе MainWindow
+void MainWindow::on_tableWidget_cellClicked(int row, int column)
+{
+    if (column == 3) { // Assuming the mission name is in the 4th column (index 3)
+        QString missionName = csvData[row][column];
+
+        // Формируем URL страницы https://nextspaceflight.com/ для данной миссии
+        QString nextSpaceFlightUrl = "https://nextspaceflight.com/launches/";
+
+        // Создаем объект QNetworkAccessManager для выполнения HTTP-запросов
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply){
+            if (reply->error() != QNetworkReply::NoError) {
+                QMessageBox::warning(this, "Error", "Failed to fetch data from nextspaceflight.com");
+                return;
+            }
+
+            // Получаем HTML-код страницы
+            QByteArray htmlData = reply->readAll();
+
+            // Парсим HTML-код, чтобы извлечь информацию о миссии
+            QString missionDetails = parseNextSpaceFlightHtml(htmlData, missionName);
+            if (missionDetails.isEmpty()) {
+                QMessageBox::warning(this, "Error", "Failed to extract mission details from nextspaceflight.com");
+                return;
+            }
+
+            // Отображаем информацию о миссии
+            QMessageBox::information(this, "Mission Details", missionDetails);
+
+            reply->deleteLater();
+        });
+
+        // Выполняем запрос на страницу nextspaceflight.com
+        manager->get(QNetworkRequest(QUrl(nextSpaceFlightUrl)));
+    }
+}
+
+QString MainWindow::parseNextSpaceFlightHtml(const QByteArray &htmlData, const QString &missionName)
+{
+    QString missionDetails;
+
+    // Создаем регулярное выражение для поиска информации о миссии в HTML-коде
+    QRegularExpression regex("<tr>\\s*<td>(.*?)</td>\\s*<td>" + missionName + "</td>(.*?)</tr>");
+    QRegularExpressionMatch match = regex.match(QString::fromUtf8(htmlData));
+
+    // Если найдено соответствие, извлекаем информацию о миссии
+    if (match.hasMatch()) {
+        QString missionInfo = match.captured(1) + match.captured(2);
+
+        // Удаление HTML-тегов из информации о миссии
+        missionInfo.remove(QRegularExpression("<[^>]*>"));
+
+        missionDetails = "Mission Details:\n\n" + missionInfo;
+    } else {
+        missionDetails = "Mission details not found.";
+    }
+
+    return missionDetails;
+}
 
