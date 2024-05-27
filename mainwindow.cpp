@@ -153,58 +153,92 @@ void MainWindow::on_tableWidget_cellClicked(int row, int column)
     if (column == 3) { // Assuming the mission name is in the 4th column (index 3)
         QString missionName = csvData[row][column];
 
-        // Формируем URL страницы https://nextspaceflight.com/ для данной миссии
-        QString nextSpaceFlightUrl = "https://nextspaceflight.com/launches/";
+        // Формируем URL страницы Википедии для данной миссии
+        QString wikipediaUrl = "https://en.wikipedia.org/wiki/" + missionName.replace(" ", "_");
 
         // Создаем объект QNetworkAccessManager для выполнения HTTP-запросов
         QNetworkAccessManager *manager = new QNetworkAccessManager(this);
         connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply){
             if (reply->error() != QNetworkReply::NoError) {
-                QMessageBox::warning(this, "Error", "Failed to fetch data from nextspaceflight.com");
+                QMessageBox::warning(this, "Error", "Failed to fetch Wikipedia page for the mission.");
                 return;
             }
 
-            // Получаем HTML-код страницы
+            // Получаем HTML-код страницы Википедии
             QByteArray htmlData = reply->readAll();
 
             // Парсим HTML-код, чтобы извлечь информацию о миссии
-            QString missionDetails = parseNextSpaceFlightHtml(htmlData, missionName);
-            if (missionDetails.isEmpty()) {
-                QMessageBox::warning(this, "Error", "Failed to extract mission details from nextspaceflight.com");
-                return;
-            }
-
-            // Отображаем информацию о миссии
+            // В этом примере мы просто выведем HTML-код в MessageBox
+            QString missionDetails = QString::fromUtf8(htmlData);
             QMessageBox::information(this, "Mission Details", missionDetails);
 
             reply->deleteLater();
         });
 
-        // Выполняем запрос на страницу nextspaceflight.com
-        manager->get(QNetworkRequest(QUrl(nextSpaceFlightUrl)));
+        // Выполняем запрос на страницу Википедии
+        manager->get(QNetworkRequest(QUrl(wikipediaUrl)));
     }
 }
 
-QString MainWindow::parseNextSpaceFlightHtml(const QByteArray &htmlData, const QString &missionName)
-{
-    QString missionDetails;
 
-    // Создаем регулярное выражение для поиска информации о миссии в HTML-коде
-    QRegularExpression regex("<tr>\\s*<td>(.*?)</td>\\s*<td>" + missionName + "</td>(.*?)</tr>");
-    QRegularExpressionMatch match = regex.match(QString::fromUtf8(htmlData));
+//// В вашем классе MainWindow
+//void MainWindow::on_tableWidget_cellClicked(int row, int column)
+//{
+//    if (column == 3) { // Assuming the mission name is in the 4th column (index 3)
+//        QString missionName = csvData[row][column];
 
-    // Если найдено соответствие, извлекаем информацию о миссии
-    if (match.hasMatch()) {
-        QString missionInfo = match.captured(1) + match.captured(2);
+//        // Формируем URL страницы https://nextspaceflight.com/ для данной миссии
+//        QString nextSpaceFlightUrl = "https://nextspaceflight.com/launches/";
 
-        // Удаление HTML-тегов из информации о миссии
-        missionInfo.remove(QRegularExpression("<[^>]*>"));
+//        // Создаем объект QNetworkAccessManager для выполнения HTTP-запросов
+//        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+//        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply){
+//            if (reply->error() != QNetworkReply::NoError) {
+//                QMessageBox::warning(this, "Error", "Failed to fetch data from nextspaceflight.com");
+//                return;
+//            }
 
-        missionDetails = "Mission Details:\n\n" + missionInfo;
-    } else {
-        missionDetails = "Mission details not found.";
-    }
+//            // Получаем HTML-код страницы
+//            QByteArray htmlData = reply->readAll();
 
-    return missionDetails;
-}
+//            // Парсим HTML-код, чтобы извлечь информацию о миссии
+//            QString missionDetails = parseNextSpaceFlightHtml(htmlData, missionName);
+//            if (missionDetails.isEmpty()) {
+//                QMessageBox::warning(this, "Error", "Failed to extract mission details from nextspaceflight.com");
+//                return;
+//            }
+
+//            // Отображаем информацию о миссии
+//            QMessageBox::information(this, "Mission Details", missionDetails);
+
+//            reply->deleteLater();
+//        });
+
+//        // Выполняем запрос на страницу nextspaceflight.com
+//        manager->get(QNetworkRequest(QUrl(nextSpaceFlightUrl)));
+//    }
+//}
+
+//QString MainWindow::parseNextSpaceFlightHtml(const QByteArray &htmlData, const QString &missionName)
+//{
+//    QString missionDetails;
+
+//    // Создаем регулярное выражение для поиска информации о миссии в HTML-коде
+//    QRegularExpression regex("<tr>\\s*<td>(.*?)</td>\\s*<td>" + missionName + "</td>(.*?)</tr>");
+//    QRegularExpressionMatch match = regex.match(QString::fromUtf8(htmlData));
+
+//    // Если найдено соответствие, извлекаем информацию о миссии
+//    if (match.hasMatch()) {
+//        QString missionInfo = match.captured(1) + match.captured(2);
+
+//        // Удаление HTML-тегов из информации о миссии
+//        missionInfo.remove(QRegularExpression("<[^>]*>"));
+
+//        missionDetails = "Mission Details:\n\n" + missionInfo;
+//    } else {
+//        missionDetails = "Mission details not found.";
+//    }
+
+//    return missionDetails;
+//}
 
