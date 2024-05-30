@@ -18,6 +18,8 @@
 #include <QNetworkReply>
 #include <QMessageBox>
 #include <QRegularExpression>
+#include <QUrl>
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -46,8 +48,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(searchButton, &QPushButton::clicked, this, &MainWindow::on_searchButton_clicked);
     connect(tableWidget, &QTableWidget::cellClicked, this, &MainWindow::on_tableWidget_cellClicked);
-
-    loadCSV("C:/Users/Аскар/OneDrive/Рабочий стол/space_missions.csv"); // Adjust the path to your CSV file
+    QPushButton *statsButton = new QPushButton("Stats Window", this);
+    connect(statsButton, &QPushButton::clicked, this, &MainWindow::on_statsButton_clicked);
+    loadCSV("C:/Users/79032/Documents/space_missions.csv");
 }
 
 MainWindow::~MainWindow()
@@ -74,7 +77,6 @@ void MainWindow::setupTable()
     headers << "CompanyName" << "Location" << "Datum" << "RocketName" << "Status Rocket" << "Status Mission";
     tableWidget->setHorizontalHeaderLabels(headers);
 
-    // Add QLineEdit for each column for filtering
     filterLineEdits.clear();
     QHBoxLayout *filterLayout = new QHBoxLayout;
     for (int i = 0; i < csvData[0].size(); ++i) {
@@ -88,10 +90,10 @@ void MainWindow::setupTable()
     QVBoxLayout *mainLayout = static_cast<QVBoxLayout *>(centralWidget()->layout());
     mainLayout->insertLayout(2, filterLayout);
 
-    // Set the columns to resize to fit the content
+
     tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
-    // Set the same width for the filter QLineEdits as the columns
+
     for (int i = 0; i < csvData[0].size(); ++i) {
         filterLineEdits[i]->setMinimumWidth(tableWidget->columnWidth(i));
     }
@@ -100,11 +102,11 @@ void MainWindow::setupTable()
 void MainWindow::updateTable(const std::vector<std::vector<QString>> &data)
 {
     tableWidget->setRowCount(data.size());
-    for (size_t i = 0; i < data.size(); ++i) {
+    for (size_t i = 1; i < data.size(); ++i) {
         for (size_t j = 0; j < data[i].size(); ++j) {
             QTableWidgetItem *item = new QTableWidgetItem(data[i][j]);
-            if (j == 3) { // Assuming the mission name is in the 4th column (index 3)
-                item->setData(Qt::UserRole, i); // Store the row index as user data
+            if (j == 0) {
+                item->setData(Qt::UserRole, i);
                 item->setForeground(Qt::blue);
                 item->setFont(QFont("Arial", 10, QFont::Bold));
                 item->setTextAlignment(Qt::AlignCenter);
@@ -147,41 +149,50 @@ void MainWindow::on_filterChanged()
     updateTable(filteredData);
 }
 
-// В вашем классе MainWindow
+
 void MainWindow::on_tableWidget_cellClicked(int row, int column)
 {
-    if (column == 3) { // Assuming the mission name is in the 4th column (index 3)
+    if (column == 0) {
         QString missionName = csvData[row][column];
 
-        // Формируем URL страницы Википедии для данной миссии
-        QString wikipediaUrl = "https://en.wikipedia.org/wiki/" + missionName.replace(" ", "_");
 
-        // Создаем объект QNetworkAccessManager для выполнения HTTP-запросов
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply){
-            if (reply->error() != QNetworkReply::NoError) {
-                QMessageBox::warning(this, "Error", "Failed to fetch Wikipedia page for the mission.");
-                return;
-            }
+        QString wikipediaUrl = "https://en.wikipedia.org/wiki/" + missionName.replace("\"", "");
 
-            // Получаем HTML-код страницы Википедии
-            QByteArray htmlData = reply->readAll();
 
-            // Парсим HTML-код, чтобы извлечь информацию о миссии
-            // В этом примере мы просто выведем HTML-код в MessageBox
-            QString missionDetails = QString::fromUtf8(htmlData);
-            QMessageBox::information(this, "Mission Details", missionDetails);
+        QUrl url = commandLineUrlArgument(wikipediaUrl);
 
-            reply->deleteLater();
-        });
+            Browser browser;
+            BrowserWindow *window = browser.createHiddenWindow();
+            window->tabWidget()->setUrl(url);
+            window->show();
 
-        // Выполняем запрос на страницу Википедии
-        manager->get(QNetworkRequest(QUrl(wikipediaUrl)));
+]
+
+//        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+//        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply){
+//            if (reply->error() != QNetworkReply::NoError) {
+//                QMessageBox::warning(this, "Error", "Failed to fetch Wikipedia page for the mission.");
+//                return;
+//            }
+
+
+//            QByteArray htmlData = reply->readAll();
+
+
+//            QString missionDetails = QString::fromUtf8(htmlData);
+//            QMessageBox::information(this, "Mission Details", missionDetails);
+
+//            reply->deleteLater();
+//        });
+
+//        manager->get(QNetworkRequest(QUrl(wikipediaUrl)));
     }
 }
 
+void MainWindow::on_statsButton_clicked() {
 
-//// В вашем классе MainWindow
+}
+
 //void MainWindow::on_tableWidget_cellClicked(int row, int column)
 //{
 //    if (column == 3) { // Assuming the mission name is in the 4th column (index 3)
@@ -241,4 +252,3 @@ void MainWindow::on_tableWidget_cellClicked(int row, int column)
 
 //    return missionDetails;
 //}
-

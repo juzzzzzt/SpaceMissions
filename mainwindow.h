@@ -27,6 +27,7 @@ private slots:
     void on_searchButton_clicked();
     void on_filterChanged();
     void on_tableWidget_cellClicked(int row, int column);
+    void on_statsButton_clicked();
 
 private:
     Ui::MainWindow *ui;
