@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "csvparser.h"
+#include "disambiguationdialog.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -8,11 +9,12 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QLineEdit>
-#include <QComboBox>
 #include <QHeaderView>
 #include <QDebug>
 #include <QProcess>
 #include <QMessageBox>
+#include <QRegularExpression>
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -140,17 +142,92 @@ void MainWindow::on_tableWidget_cellClicked(int row, int column)
 {
     if (column == 0) {
         QString companyName = tableWidget->item(row, column)->text();
+        QString wikipediaUrl;
+
+        if (companyName == "\"US Navy") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/SpaceX";
+        } else if (companyName == "\"CASC") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/China_Aerospace_Science_and_Technology_Corporation";
+        } else if (companyName == "\"ULA") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/United_Launch_Alliance";
+        } else if (companyName == "\"JAXA") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/JAXA";
+        } else if (companyName == "\"Northrop") {
+            wikipediaUrl = "https://www.northropgrumman.com";
+        } else if (companyName == "\"VKS RF") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Russian_Aerospace_Forces";
+        } else if (companyName == "\"RVSN USSR") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Strategic_Rocket_Forces";
+        } else if (companyName == "\"SpaceX") {
+            wikipediaUrl = "https://www.spacex.com";
+        } else if (companyName == "\"Lockheed") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Lockheed_Martin_Space";
+        } else if (companyName == "\"NASA") {
+            wikipediaUrl = "https://www.nasa.gov";
+        } else if (companyName == "\"ILS") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/International_Launch_Services";
+        } else if (companyName == "\"Boeing") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Boeing_Defense,_Space_%26_Security";
+        } else if (companyName == "\"MHI") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Mitsubishi_Heavy_Industries";
+        } else if (companyName == "\"ISAS") {
+            wikipediaUrl = "https://en.m.wikipedia.org/wiki/Institute_of_Space_and_Astronautical_Science";
+        } else if (companyName == "\"Rocket Lab") {
+            wikipediaUrl = "https://www.rocketlabusa.com";
+        } else if (companyName == "\"ESA") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/European_Space_Agency";
+        } else if (companyName == "\"ASI") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Italian_Space_Agency";
+        } else if (companyName == "\"MITT") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Moscow_Institute_of_Thermal_Technology";
+        } else if (companyName == "\"IRGC") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Islamic_Revolutionary_Guard_Corps_Aerospace_Force";
+        } else if (companyName == "\"IAI") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Israel_Aerospace_Industries";
+        } else if (companyName == "\"ISA") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Iranian_Space_Agency";
+        }
+
+        else {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/" + companyName.replace("\"", "");
+        }
+
         QStringList arguments;
-        QString wikipediaUrl = "https://en.wikipedia.org/wiki/" + companyName.replace("\"", "");
         QString scriptPath = "C:/Users/Аскар/Desktop/pythonProject/parse_wikipedia.py";
         arguments << scriptPath << wikipediaUrl;
 
         QProcess *process = new QProcess(this);
         QString pythonPath = "C:/Program Files/Python312/python.exe";
-        connect(process, &QProcess::readyReadStandardOutput, this, [this, process]() {
+        connect(process, &QProcess::readyReadStandardOutput, this, [this, process, scriptPath, pythonPath]() { // захватите scriptPath и pythonPath
             QString output = process->readAllStandardOutput();
-            missionDetailWindow->setMissionDetails(output);
-            missionDetailWindow->show();
+
+            if (output.startsWith("Disambiguation error:")) {
+                QStringList options = output.remove("Disambiguation error: [").remove("]").split(", ");
+                DisambiguationDialog dialog(options, this);
+                if (dialog.exec() == QDialog::Accepted) {
+                    QString selectedOption = dialog.getSelectedOption();
+                    QStringList newArguments;
+                    QString newWikipediaUrl = "https://en.wikipedia.org/wiki/" + selectedOption.replace("\"", "");
+                    newArguments << scriptPath << newWikipediaUrl;
+
+                    QProcess *newProcess = new QProcess(this);
+                    newProcess->start(pythonPath, newArguments);
+                    connect(newProcess, &QProcess::readyReadStandardOutput, this, [this, newProcess]() {
+                        QString newOutput = newProcess->readAllStandardOutput();
+                        missionDetailWindow->setMissionDetails(newOutput);
+                        missionDetailWindow->exec();
+                    });
+                    connect(newProcess, &QProcess::readyReadStandardError, this, [this, newProcess]() {
+                        QString error = newProcess->readAllStandardError();
+                        QMessageBox::critical(this, "Error", error);
+                    });
+                }
+            } else {
+                missionDetailWindow->setMissionDetails(output);
+                missionDetailWindow->exec();
+            }
+
+            process->deleteLater();
         });
         connect(process, &QProcess::readyReadStandardError, this, [this, process]() {
             QString error = process->readAllStandardError();
