@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "csvparser.h"
-#include "statswindow.h"
+#include "statwindow.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -11,6 +11,7 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QHeaderView>
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -26,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     tableWidget = new QTableWidget(this);
 
     QPushButton *searchButton = new QPushButton("Search", this);
-    QPushButton *openSecondWindowButton = new QPushButton("Open Second Window", this); // New button
+    QPushButton *openSecondWindowButton = new QPushButton("Open Stats Window", this);
 
     QHBoxLayout *searchLayout = new QHBoxLayout;
     searchLayout->addWidget(searchLineEdit);
@@ -95,21 +96,6 @@ void MainWindow::updateTable(const std::vector<std::vector<QString>> &data)
     }
 }
 
-//void MainWindow::on_searchButton_clicked()
-//{
-//    QString searchText = searchLineEdit->text().trimmed();
-//    std::vector<std::vector<QString>> filteredData;
-//    for (const auto &row : csvData) {
-//        for (const auto &field : row) {
-//            if (field.contains(searchText, Qt::CaseInsensitive)) {
-//                filteredData.push_back(row);
-//                break;
-//            }
-//        }
-//    }
-//    updateTable(filteredData);
-//}
-
 void MainWindow::on_filterChanged()
 {
     std::vector<std::vector<QString>> filteredData = csvData;
@@ -128,19 +114,11 @@ void MainWindow::on_filterChanged()
     updateTable(filteredData);
 }
 
-//void MainWindow::on_openSecondWindowButton_clicked()
-//{
-//    SecondWindow *secondWindow = new SecondWindow(this);
-//    secondWindow->show();
-
-//}
-
 void MainWindow::on_pushButton_4_clicked()
 {
-    SecondWindow *secondWindow = new SecondWindow(this);
+    StatWindow *secondWindow = new StatWindow();
     secondWindow->show();
 }
-
 
 void MainWindow::on_pushButton_5_clicked()
 {
@@ -156,4 +134,3 @@ void MainWindow::on_pushButton_5_clicked()
     }
     updateTable(filteredData);
 }
-

@@ -7,7 +7,7 @@
 #include <QComboBox>
 #include <QTableWidget>
 #include <vector>
-#include "statswindow.h"
+#include "statwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -39,7 +39,7 @@ private:
     void updateTable(const std::vector<std::vector<QString>> &data);
 
     QPushButton *openWindowButton;
-    SecondWindow *secondWindow;
+    StatWindow *secondWindow;
     QComboBox *filterComboBox;
 
 };

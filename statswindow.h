@@ -2,6 +2,9 @@
 #define SECONDWINDOW_H
 
 #include <QWidget>
+namespace Ui{
+class SecondWindow;
+}
 
 class SecondWindow : public QWidget
 {
@@ -9,6 +12,10 @@ class SecondWindow : public QWidget
 
 public:
     explicit SecondWindow(QWidget *parent = nullptr);
+    ~SecondWindow();
+
+private:
+    Ui::SecondWindow *ui2;
 };
 
 #endif
