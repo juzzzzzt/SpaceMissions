@@ -11,8 +11,7 @@ MissionDetailWindow::MissionDetailWindow(QWidget *parent)
 
 MissionDetailWindow::~MissionDetailWindow()
 {
-    // Объекты detailsLabel и layout будут удалены автоматически,
-    // так как они дочерние объекты для этого виджета.
+
 }
 
 void MissionDetailWindow::setMissionDetails(const QString &details)
