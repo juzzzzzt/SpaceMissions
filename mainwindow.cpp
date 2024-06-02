@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "csvparser.h"
 #include "disambiguationdialog.h"
+#include "globalstatswindow.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -20,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , missionDetailWindow(new MissionDetailWindow(this))
+    , globalStatsWindow(new GlobalStatsWindow(this))
 {
     ui->setupUi(this);
 
@@ -76,10 +78,12 @@ MainWindow::MainWindow(QWidget *parent)
         ).arg(imagePath));
 
     QPushButton *searchButton = new QPushButton("Search", this);
+    globalStatsButton = new QPushButton("GlobalStats", this);
 
     QHBoxLayout *searchLayout = new QHBoxLayout;
     searchLayout->addWidget(searchLineEdit);
     searchLayout->addWidget(searchButton);
+    searchLayout->addWidget(globalStatsButton);
 
     mainLayout->addLayout(searchLayout);
     mainLayout->addWidget(tableWidget);
@@ -88,6 +92,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(searchButton, &QPushButton::clicked, this, &MainWindow::on_searchButton_clicked);
     connect(tableWidget, &QTableWidget::cellClicked, this, &MainWindow::on_tableWidget_cellClicked);
+    connect(globalStatsButton, &QPushButton::clicked, this, &MainWindow::on_globalStatsButton_clicked);
     loadCSV("C:/Users/Аскар/OneDrive/Рабочий стол/space_missions.csv");
 
     tableWidget->verticalHeader()->setVisible(false);
@@ -286,7 +291,7 @@ void MainWindow::on_tableWidget_cellClicked(int row, int column)
         });
 
         process->start(pythonPath, arguments);
-    } else if (column == 3) { // Нажатие на название ракеты
+    } else if (column == 3) {
         QString rocketName = tableWidget->item(row, column)->text();
         QStringList arguments;
         QString scriptPath = "C:/Users/Аскар/Desktop/pythonProject/fetch_rocket_details.py";
@@ -307,4 +312,9 @@ void MainWindow::on_tableWidget_cellClicked(int row, int column)
 
         process->start(pythonPath, arguments);
     }
+}
+
+void MainWindow::on_globalStatsButton_clicked()
+{
+    globalStatsWindow->exec();
 }

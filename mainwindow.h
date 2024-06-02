@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "missiondetailwindow.h"
+#include "globalstatswindow.h"
 
 
 namespace Ui {
@@ -28,6 +29,7 @@ private slots:
     void on_searchButton_clicked();
     void on_filterChanged();
     void on_tableWidget_cellClicked(int row, int column);
+    void on_globalStatsButton_clicked();
 
 private:
     void loadCSV(const QString &filename);
@@ -40,6 +42,8 @@ private:
     QVector<QLineEdit*> filterLineEdits;
     std::vector<std::vector<QString>> csvData;
     MissionDetailWindow *missionDetailWindow;
+    GlobalStatsWindow *globalStatsWindow;
+    QPushButton *globalStatsButton;
 };
 
 #endif // MAINWINDOW_H

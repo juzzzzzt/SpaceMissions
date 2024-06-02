@@ -19,18 +19,14 @@ set(PROJECT_SOURCES
         mainwindow.ui
         csvparser.h
         csvparser.cpp
-        statswindow.ui
         detailswindow.ui
-        statswindow.cpp
-        statswindow.h
         missiondetailwindow.h
         missiondetailwindow.cpp
         missiondetailwindow.ui
         disambiguationdialog.h
         disambiguationdialog.cpp
-        statwindow.h
-        statwindow.cpp
-        statwindow.ui
+        globalstatswindow.h
+        globalstatswindow.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
