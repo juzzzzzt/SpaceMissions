@@ -1,21 +1,18 @@
 #include "missiondetailwindow.h"
 
-MissionDetailWindow::MissionDetailWindow(QWidget *parent)
-    : QWidget(parent),
-      detailsLabel(new QLabel(this)),
-      layout(new QVBoxLayout(this))
+MissionDetailWindow::MissionDetailWindow(QWidget *parent) :
+    QDialog(parent),
+    detailsTextEdit(new QTextEdit(this))
 {
-    layout->addWidget(detailsLabel);
-    setLayout(layout);
-}
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->addWidget(detailsTextEdit);
 
-MissionDetailWindow::~MissionDetailWindow()
-{
-    // Объекты detailsLabel и layout будут удалены автоматически,
-    // так как они дочерние объекты для этого виджета.
+    setLayout(layout);
+    setWindowTitle("Mission Details");
+    resize(400, 300);
 }
 
 void MissionDetailWindow::setMissionDetails(const QString &details)
 {
-    detailsLabel->setText(details);
+    detailsTextEdit->setPlainText(details);
 }

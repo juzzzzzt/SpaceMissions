@@ -1,24 +1,21 @@
-/*#include "statswindow.h"
+//#ifndef SECONDWINDOW_H
+//#define SECONDWINDOW_H
 
-StatsWindow::StatsWindow(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::StatsWindow)
-{
-    ui->setupUi(this);
+//#include <QWidget>
+//namespace Ui{
+//class SecondWindow;
+//}
 
-    // Создаем кнопку "Назад"
-    QPushButton *backButton = new QPushButton("Назад", this);
+//class SecondWindow : public QWidget
+//{
+//    Q_OBJECT
 
-    // Устанавливаем кнопку "Назад" в макет
-    QVBoxLayout *layout = new QVBoxLayout;
-    layout->addWidget(backButton);
-    setLayout(layout);
+//public:
+//    explicit SecondWindow(QWidget *parent = nullptr);
+//    ~SecondWindow();
 
-    // Подключаем сигнал кнопки "Назад"
-    connect(backButton, &QPushButton::clicked, this, &StatsWindow::backButtonClicked);
-}
+//private:
+//    Ui::SecondWindow *ui2;
+//};
 
-StatsWindow::~StatsWindow()
-{
-    delete ui;
-}*/
+//#endif

@@ -26,6 +26,11 @@ set(PROJECT_SOURCES
         missiondetailwindow.h
         missiondetailwindow.cpp
         missiondetailwindow.ui
+        disambiguationdialog.h
+        disambiguationdialog.cpp
+        statwindow.h
+        statwindow.cpp
+        statwindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

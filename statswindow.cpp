@@ -1,16 +1,14 @@
-/*#include "statswindow.h"
-#include "ui_statswindow.h"
+//#include "statswindow.h"
 
-StatsWindow::StatsWindow(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::StatsWindow)
-{
-    ui->setupUi(this);
+//SecondWindow::SecondWindow(QWidget *parent) : QWidget(parent)
+////  , ui2(new Ui::SecondWindow)
+//{
+////    ui2->setupUi(this);
+//    setWindowTitle("Second Window");
+//    resize(400, 300); // Set the size of the second window
+//}
 
-    connect(ui->backButton, &QPushButton::clicked, this, &StatsWindow::backButtonClicked);
-}
-
-StatsWindow::~StatsWindow()
-{
-    delete ui;
-}*/
+//SecondWindow::~SecondWindow()
+//{
+////    delete ui;
+//}

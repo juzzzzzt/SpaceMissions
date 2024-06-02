@@ -1,7 +1,7 @@
-// mainwindow.cpp
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "csvparser.h"
+#include "disambiguationdialog.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -12,14 +12,9 @@
 #include <QComboBox>
 #include <QHeaderView>
 #include <QDebug>
-
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
+#include <QProcess>
 #include <QMessageBox>
 #include <QRegularExpression>
-#include <QUrl>
-
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -31,9 +26,54 @@ MainWindow::MainWindow(QWidget *parent)
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
 
-    // Create and set up UI components
     searchLineEdit = new QLineEdit(this);
     tableWidget = new QTableWidget(this);
+
+    QString imagePath = "C:/Users/Аскар/Downloads/back.png";
+    centralWidget->setStyleSheet(
+        QString(
+        "QWidget {"
+        "    background-color: black;"
+        "    color: white;"
+        "    border: 1px solid gray;"
+        "}"
+        "QTableWidget {"
+        "    background-color: black;"
+        "    color: white;"
+        "    background-image: url(%100);"
+        "    background-repeat: repeat;"
+        "    background-position: center;"
+        "    background-size: auto;"
+        "    gridline-color: black;"
+        "    border: none;"
+        "}"
+        "QTableWidget::item {"
+        "    border: none;"
+        "}"
+        "QHeaderView::section {"
+        "    background-color: black;"
+        "    color: white;"
+        "    border: 1px solid gray;"
+        "}"
+        "QLineEdit {"
+        "    background-color: #333333;"
+        "    color: white;"
+        "    border: 1px solid gray;"
+        "    padding: 5px;"
+        "}"
+        "QPushButton {"
+        "    background-color: #333333;"
+        "    color: white;"
+        "    border: 1px solid gray;"
+        "    padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #444444;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #555555;"
+        "}"
+        ).arg(imagePath));
 
     QPushButton *searchButton = new QPushButton("Search", this);
 
@@ -48,9 +88,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(searchButton, &QPushButton::clicked, this, &MainWindow::on_searchButton_clicked);
     connect(tableWidget, &QTableWidget::cellClicked, this, &MainWindow::on_tableWidget_cellClicked);
-    QPushButton *statsButton = new QPushButton("Stats Window", this);
-    connect(statsButton, &QPushButton::clicked, this, &MainWindow::on_statsButton_clicked);
-    loadCSV("C:/Users/79032/Documents/space_missions.csv");
+    loadCSV("C:/Users/Аскар/OneDrive/Рабочий стол/space_missions.csv");
+
+    tableWidget->verticalHeader()->setVisible(false);
 }
 
 MainWindow::~MainWindow()
@@ -70,9 +110,8 @@ void MainWindow::setupTable()
     if (csvData.empty()) return;
 
     tableWidget->setColumnCount(csvData[0].size());
-    tableWidget->setRowCount(0); // Initially no rows, as we will add them dynamically
+    tableWidget->setRowCount(0);
 
-    // Set the table headers
     QStringList headers;
     headers << "CompanyName" << "Location" << "Datum" << "RocketName" << "Status Rocket" << "Status Mission";
     tableWidget->setHorizontalHeaderLabels(headers);
@@ -90,9 +129,7 @@ void MainWindow::setupTable()
     QVBoxLayout *mainLayout = static_cast<QVBoxLayout *>(centralWidget()->layout());
     mainLayout->insertLayout(2, filterLayout);
 
-
     tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-
 
     for (int i = 0; i < csvData[0].size(); ++i) {
         filterLineEdits[i]->setMinimumWidth(tableWidget->columnWidth(i));
@@ -105,10 +142,13 @@ void MainWindow::updateTable(const std::vector<std::vector<QString>> &data)
     for (size_t i = 1; i < data.size(); ++i) {
         for (size_t j = 0; j < data[i].size(); ++j) {
             QTableWidgetItem *item = new QTableWidgetItem(data[i][j]);
-            if (j == 0) {
+            if (j == 0 or j == 3) {
                 item->setData(Qt::UserRole, i);
-                item->setForeground(Qt::blue);
+                item->setForeground(Qt::cyan);
                 item->setFont(QFont("Arial", 10, QFont::Bold));
+                item->setTextAlignment(Qt::AlignCenter);
+            }
+            else {
                 item->setTextAlignment(Qt::AlignCenter);
             }
             tableWidget->setItem(i, j, item);
@@ -149,106 +189,122 @@ void MainWindow::on_filterChanged()
     updateTable(filteredData);
 }
 
-
 void MainWindow::on_tableWidget_cellClicked(int row, int column)
 {
     if (column == 0) {
-        QString missionName = csvData[row][column];
+        QString companyName = tableWidget->item(row, column)->text();
+        QString wikipediaUrl;
 
+        if (companyName == "\"US Navy") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/SpaceX";
+        } else if (companyName == "\"CASC") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/China_Aerospace_Science_and_Technology_Corporation";
+        } else if (companyName == "\"ULA") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/United_Launch_Alliance";
+        } else if (companyName == "\"JAXA") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/JAXA";
+        } else if (companyName == "\"Northrop") {
+            wikipediaUrl = "https://www.northropgrumman.com";
+        } else if (companyName == "\"VKS RF") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Russian_Aerospace_Forces";
+        } else if (companyName == "\"RVSN USSR") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Strategic_Rocket_Forces";
+        } else if (companyName == "\"SpaceX") {
+            wikipediaUrl = "https://www.spacex.com";
+        } else if (companyName == "\"Lockheed") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Lockheed_Martin_Space";
+        } else if (companyName == "\"NASA") {
+            wikipediaUrl = "https://www.nasa.gov";
+        } else if (companyName == "\"ILS") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/International_Launch_Services";
+        } else if (companyName == "\"Boeing") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Boeing_Defense,_Space_%26_Security";
+        } else if (companyName == "\"MHI") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Mitsubishi_Heavy_Industries";
+        } else if (companyName == "\"ISAS") {
+            wikipediaUrl = "https://en.m.wikipedia.org/wiki/Institute_of_Space_and_Astronautical_Science";
+        } else if (companyName == "\"Rocket Lab") {
+            wikipediaUrl = "https://www.rocketlabusa.com";
+        } else if (companyName == "\"ESA") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/European_Space_Agency";
+        } else if (companyName == "\"ASI") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Italian_Space_Agency";
+        } else if (companyName == "\"MITT") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Moscow_Institute_of_Thermal_Technology";
+        } else if (companyName == "\"IRGC") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Islamic_Revolutionary_Guard_Corps_Aerospace_Force";
+        } else if (companyName == "\"IAI") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Israel_Aerospace_Industries";
+        } else if (companyName == "\"ISA") {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/Iranian_Space_Agency";
+        }
 
-        QString wikipediaUrl = "https://en.wikipedia.org/wiki/" + missionName.replace("\"", "");
+        else {
+            wikipediaUrl = "https://en.wikipedia.org/wiki/" + companyName.replace("\"", "");
+        }
 
+        QStringList arguments;
+        QString scriptPath = "C:/Users/Аскар/Desktop/pythonProject/parse_wikipedia.py";
+        arguments << scriptPath << wikipediaUrl;
 
-        QUrl url = commandLineUrlArgument(wikipediaUrl);
+        QProcess *process = new QProcess(this);
+        QString pythonPath = "C:/Program Files/Python312/python.exe";
+        connect(process, &QProcess::readyReadStandardOutput, this, [this, process, scriptPath, pythonPath]() { // захватите scriptPath и pythonPath
+            QString output = process->readAllStandardOutput();
 
-            Browser browser;
-            BrowserWindow *window = browser.createHiddenWindow();
-            window->tabWidget()->setUrl(url);
-            window->show();
+            if (output.startsWith("Disambiguation error:")) {
+                QStringList options = output.remove("Disambiguation error: [").remove("]").split(", ");
+                DisambiguationDialog dialog(options, this);
+                if (dialog.exec() == QDialog::Accepted) {
+                    QString selectedOption = dialog.getSelectedOption();
+                    QStringList newArguments;
+                    QString newWikipediaUrl = "https://en.wikipedia.org/wiki/" + selectedOption.replace("\"", "");
+                    newArguments << scriptPath << newWikipediaUrl;
 
-]
+                    QProcess *newProcess = new QProcess(this);
+                    newProcess->start(pythonPath, newArguments);
+                    connect(newProcess, &QProcess::readyReadStandardOutput, this, [this, newProcess]() {
+                        QString newOutput = newProcess->readAllStandardOutput();
+                        missionDetailWindow->setMissionDetails(newOutput);
+                        missionDetailWindow->exec();
+                    });
+                    connect(newProcess, &QProcess::readyReadStandardError, this, [this, newProcess]() {
+                        QString error = newProcess->readAllStandardError();
+                        QMessageBox::critical(this, "Error", error);
+                    });
+                }
+            } else {
+                missionDetailWindow->setMissionDetails(output);
+                missionDetailWindow->exec();
+            }
 
-//        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-//        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply){
-//            if (reply->error() != QNetworkReply::NoError) {
-//                QMessageBox::warning(this, "Error", "Failed to fetch Wikipedia page for the mission.");
-//                return;
-//            }
+            process->deleteLater();
+        });
+        connect(process, &QProcess::readyReadStandardError, this, [this, process]() {
+            QString error = process->readAllStandardError();
+            QMessageBox::critical(this, "Error", error);
+        });
 
+        process->start(pythonPath, arguments);
+    } else if (column == 3) { // Нажатие на название ракеты
+        QString rocketName = tableWidget->item(row, column)->text();
+        QStringList arguments;
+        QString scriptPath = "C:/Users/Аскар/Desktop/pythonProject/fetch_rocket_details.py";
+        arguments << scriptPath << rocketName;
 
-//            QByteArray htmlData = reply->readAll();
+        QProcess *process = new QProcess(this);
+        QString pythonPath = "C:/Program Files/Python312/python.exe";
+        connect(process, &QProcess::readyReadStandardOutput, this, [this, process]() {
+            QString output = process->readAllStandardOutput();
+            missionDetailWindow->setMissionDetails(output);
+            missionDetailWindow->exec();
+            process->deleteLater();
+        });
+        connect(process, &QProcess::readyReadStandardError, this, [this, process]() {
+            QString error = process->readAllStandardError();
+            QMessageBox::critical(this, "Error", error);
+        });
 
-
-//            QString missionDetails = QString::fromUtf8(htmlData);
-//            QMessageBox::information(this, "Mission Details", missionDetails);
-
-//            reply->deleteLater();
-//        });
-
-//        manager->get(QNetworkRequest(QUrl(wikipediaUrl)));
+        process->start(pythonPath, arguments);
     }
 }
-
-void MainWindow::on_statsButton_clicked() {
-
-}
-
-//void MainWindow::on_tableWidget_cellClicked(int row, int column)
-//{
-//    if (column == 3) { // Assuming the mission name is in the 4th column (index 3)
-//        QString missionName = csvData[row][column];
-
-//        // Формируем URL страницы https://nextspaceflight.com/ для данной миссии
-//        QString nextSpaceFlightUrl = "https://nextspaceflight.com/launches/";
-
-//        // Создаем объект QNetworkAccessManager для выполнения HTTP-запросов
-//        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-//        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply){
-//            if (reply->error() != QNetworkReply::NoError) {
-//                QMessageBox::warning(this, "Error", "Failed to fetch data from nextspaceflight.com");
-//                return;
-//            }
-
-//            // Получаем HTML-код страницы
-//            QByteArray htmlData = reply->readAll();
-
-//            // Парсим HTML-код, чтобы извлечь информацию о миссии
-//            QString missionDetails = parseNextSpaceFlightHtml(htmlData, missionName);
-//            if (missionDetails.isEmpty()) {
-//                QMessageBox::warning(this, "Error", "Failed to extract mission details from nextspaceflight.com");
-//                return;
-//            }
-
-//            // Отображаем информацию о миссии
-//            QMessageBox::information(this, "Mission Details", missionDetails);
-
-//            reply->deleteLater();
-//        });
-
-//        // Выполняем запрос на страницу nextspaceflight.com
-//        manager->get(QNetworkRequest(QUrl(nextSpaceFlightUrl)));
-//    }
-//}
-
-//QString MainWindow::parseNextSpaceFlightHtml(const QByteArray &htmlData, const QString &missionName)
-//{
-//    QString missionDetails;
-
-//    // Создаем регулярное выражение для поиска информации о миссии в HTML-коде
-//    QRegularExpression regex("<tr>\\s*<td>(.*?)</td>\\s*<td>" + missionName + "</td>(.*?)</tr>");
-//    QRegularExpressionMatch match = regex.match(QString::fromUtf8(htmlData));
-
-//    // Если найдено соответствие, извлекаем информацию о миссии
-//    if (match.hasMatch()) {
-//        QString missionInfo = match.captured(1) + match.captured(2);
-
-//        // Удаление HTML-тегов из информации о миссии
-//        missionInfo.remove(QRegularExpression("<[^>]*>"));
-
-//        missionDetails = "Mission Details:\n\n" + missionInfo;
-//    } else {
-//        missionDetails = "Mission details not found.";
-//    }
-
-//    return missionDetails;
-//}
