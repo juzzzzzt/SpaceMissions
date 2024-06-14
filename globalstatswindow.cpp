@@ -5,7 +5,7 @@ GlobalStatsWindow::GlobalStatsWindow(QWidget *parent) : QDialog(parent)
     QVBoxLayout *layout = new QVBoxLayout(this);
 
     statsLabel = new QLabel(this);
-    QPixmap pixmap("C:/Users/Аскар/Downloads/pohuy.png");
+    QPixmap pixmap("C:/Users/Аскар/Downloads/oatu.png");
     statsLabel->setPixmap(pixmap);
     statsLabel->setAlignment(Qt::AlignCenter);
 
